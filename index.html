@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dica Direta Ofertas</title>
+    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração de Fonte Inter --><style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Gradiente de fundo: de um preto suave para um cinza escuro */
+            background: linear-gradient(to bottom, #1a1a1a, #333333); /* Alterado para preto e cinza */
+            background-attachment: fixed; /* Garante que o gradiente cubra toda a tela */
+            color: #f3f4f6; /* Cor padrão do texto no fundo escuro */
+        }
+        /* Ajustes para o status de autenticação ficar visível */
+        #auth-status {
+            background-color: rgba(255, 255, 255, 0.1); /* Fundo translúcido */
+            border-color: #bbbbbb; /* Borda cinza suave */
+            color: #eeeeee; /* Texto cinza claro */
+        }
+        #auth-status.bg-green-100 { background-color: rgba(144, 238, 144, 0.2); border-color: #90ee90; color: #90ee90; }
+        #auth-status.bg-red-100 { background-color: rgba(255, 99, 71, 0.2); border-color: #ff6347; color: #ff6347; }
+        
+        /* Adicionando uma sombra sutil ao texto para destaque */
+        .drop-shadow-lg {
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8">
+
+    <div id="app" class="max-w-6xl mx-auto">
+        <header class="text-center mb-12">
+            <!-- Título Principal com cor clara (Amarelo Dourado) e sombra -->
+            <!-- LOGO: Atualizada para usar o ID do arquivo original, garantindo a transparência. -->
+            <img id="main-logo" 
+                 src="uploaded:DICADIRETA LOGO.png-a35b194f-31c5-4145-8bfa-b90d61ca666b" 
+                 alt="Logo Dica Direta Ofertas (Fundo Transparente)" 
+                 class="max-h-32 mx-auto w-auto"
+                 onerror="this.style.display='none'; document.getElementById('logo-text-fallback').style.display='block';"
+            >
+            <!-- Fallback de Texto se a imagem falhar (Originalmente o H1) -->
+            <h1 id="logo-text-fallback" class="text-4xl font-extrabold text-yellow-300 tracking-tight drop-shadow-lg">
+                Dica Direta Ofertas
+            </h1>
+            <!-- Subtítulo com cor cinza claro -->
+            <p class="mt-2 text-lg text-gray-300">Seus componentes e as melhores ofertas da web em um só lugar.</p>
+        </header>
+
+        <!-- Status de Autenticação e Carregamento --><div id="auth-status" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-8 rounded-lg shadow-md" role="alert">
+            <p class="font-bold">Aguardando...</p>
+            <p>Conectando ao Firebase...</p>
+        </div>
+        
+        <!-- Área do Botão para Adicionar Novo Anúncio (Mostra APENAS para o Proprietário) --><div id="form-toggle-area" class="text-center mb-8 hidden">
+             <button id="toggle-form-btn" class="px-8 py-3 bg-yellow-400 text-gray-900 font-bold rounded-xl hover:bg-yellow-300 transition duration-150 shadow-lg text-lg">
+                + Adicionar Nova Oferta
+            </button>
+        </div>
+
+        <!-- Formulário para Adicionar Novo Anúncio (Inicialmente Oculto) --><div id="ad-form-section" class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl mb-12 border border-gray-200 hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Adicionar Novo Anúncio</h2>
+            <form id="add-ad-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Título --><div>
+                        <label for="title" class="block text-sm font-medium text-gray-700">Título do Produto (Ex: RTX 4060)</label>
+                        <input type="text" id="title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900">
+                    </div>
+                    <!-- Preço --><div>
+                        <label for="price" class="block text-sm font-medium text-gray-700">Preço (Ex: R$ 2.500,00)</label>
+                        <input type="text" id="price" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900">
+                    </div>
+                </div>
+
+                <!-- NOVOS CAMPOS: CATEGORIA E SUBCATEGORIA --><div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Categoria --><div>
+                        <label for="category" class="block text-sm font-medium text-gray-700">Categoria Principal (Obrigatório)</label>
+                        <select id="category" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900">
+                            <option value="">-- Selecione uma Categoria --</option>
+                            <option value="Placa de Vídeo">Placa de Vídeo (GPU)</option>
+                            <option value="Processador">Processador (CPU)</option>
+                            <option value="Memória RAM">Memória RAM</option>
+                            <option value="Placa Mãe">Placa Mãe</option>
+                            <option value="Armazenamento">Armazenamento (SSD/HD)</option>
+                            <option value="Fonte de Alimentação">Fonte de Alimentação (PSU)</option>
+                            <option value="Gabinete">Gabinete</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <!-- Subcategoria --><div>
+                        <label for="subcategory" class="block text-sm font-medium text-gray-700">Subcategoria (Opcional, Ex: DDR5, M.2 NVMe)</label>
+                        <input type="text" id="subcategory" placeholder="Detalhe a subcategoria..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900">
+                    </div>
+                </div>
+
+                <!-- Descrição --><div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Descrição Curta</label>
+                    <textarea id="description" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900"></textarea>
+                </div>
+
+                <!-- URL da Imagem --><div>
+                    <label for="imageUrl" class="block text-sm font-medium text-gray-700">URL da Imagem (Link direto)</label>
+                    <input type="url" id="imageUrl" placeholder="https://placehold.co/400x300/1e293b/ffffff?text=Hardware" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900">
+                </div>
+                
+                <h3 class="text-xl font-medium text-gray-800 pt-4 border-t mt-6">Links das Plataformas</h3>
+                <p class="text-sm text-gray-500">Insira o URL completo do anúncio em cada plataforma (deixe vazio se não houver).</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Shopee --><div>
+                        <label for="link_shopee" class="block text-sm font-medium text-gray-700">Shopee URL</label>
+                        <input type="url" id="link_shopee" placeholder="https://shopee.com.br/..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border text-gray-900">
+                    </div>
+                    <!-- Mercado Livre --><div>
+                        <label for="link_mercadoLivre" class="block text-sm font-medium text-gray-700">Mercado Livre URL</label>
+                        <input type="url" id="link_mercadoLivre" placeholder="https://mercadolivre.com.br/..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 p-3 border text-gray-900">
+                    </div>
+                    <!-- AliExpress --><div>
+                        <label for="link_aliexpress" class="block text-sm font-medium text-gray-700">AliExpress URL</label>
+                        <input type="url" id="link_aliexpress" placeholder="https://aliexpress.com/..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border text-gray-900">
+                    </div>
+                    <!-- Amazon --><div>
+                        <label for="link_amazon" class="block text-sm font-medium text-gray-700">Amazon URL</label>
+                        <input type="url" id="link_amazon" placeholder="https://amazon.com.br/..." class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-3 border text-gray-900">
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-btn" class="w-full mt-6 px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md">
+                    Adicionar Anúncio
+                </button>
+            </form>
+        </div>
+
+        <!-- O título 'Anúncios de Hardware' foi removido daqui -->
+        
+        <!-- NOVO BLOCO DE FILTROS --><div class="mb-8 p-4 bg-gray-700 rounded-xl shadow-inner">
+            <h3 class="text-lg font-semibold text-gray-200 mb-3">Filtrar por Categoria</h3>
+            <select id="category-filter" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border text-gray-900 bg-white">
+                <option value="all">Mostrar Todas as Categorias</option>
+                <option value="Placa de Vídeo">Placa de Vídeo (GPU)</option>
+                <option value="Processador">Processador (CPU)</option>
+                <option value="Memória RAM">Memória RAM</option>
+                <option value="Placa Mãe">Placa Mãe</option>
+                <option value="Armazenamento">Armazenamento (SSD/HD)</option>
+                <option value="Fonte de Alimentação">Fonte de Alimentação (PSU)</option>
+                <option value="Gabinete">Gabinete</option>
+                <option value="Periféricos">Periféricos</option>
+                <option value="Outros">Outros</option>
+            </select>
+        </div>
+        
+        <div id="ads-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Os cards de anúncios serão injetados aqui --></div>
+        
+        <!-- Mensagem se não houver anúncios --><p id="no-ads-message" class="text-center text-gray-400 p-8 hidden">Nenhum anúncio público encontrado. Use o formulário acima para adicionar seu primeiro item (se for o proprietário)!</p>
+        
+        <!-- Modal de Erro/Informação --><div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full">
+                <h3 id="modal-title" class="text-xl font-bold mb-4 text-gray-800"></h3>
+                <p id="modal-message" class="text-gray-600 mb-6"></p>
+                <button id="modal-close" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150">
+                    Entendi
+                </button>
+            </div>
+        </div>
+        
+        <!-- ID do Usuário (Para fins de depuração e compartilhamento) --><footer class="mt-12 pt-6 border-t border-gray-300 text-sm text-gray-400 text-center">
+            <!-- Apenas para depuração do proprietário/colaborador --><p>ID do Usuário Logado: <span id="user-id" class="font-mono text-gray-300">...</span></p>
+        </footer>
+    </div>
+
+    <!-- Firebase Imports e Script de Inicialização --><script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configurações e Variáveis Globais (MANDATÓRIAS)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? initialAuthToken : null;
+
+        // NOVO CAMINHO: Coleção pública que todos leem.
+        const SHARED_ADS_COLLECTION_PATH = `artifacts/${appId}/public/data/shared_ads`; 
+
+        let db = null;
+        let auth = null;
+        let userId = null;
+        let isAuthReady = false;
+        // VARIÁVEL: Define se o usuário é o proprietário (true se houver token personalizado)
+        let isOwner = initialAuthToken !== null; 
+        
+        // VARIÁVEL GLOBAL PARA ARMAZENAR TODOS OS ANÚNCIOS DO FIRESTORE
+        let allAds = [];
+
+        // Elementos UI
+        const authStatusEl = document.getElementById('auth-status');
+        const formToggleArea = document.getElementById('form-toggle-area');
+        const toggleFormBtn = document.getElementById('toggle-form-btn');
+        const adFormSection = document.getElementById('ad-form-section');
+        const adsContainer = document.getElementById('ads-container');
+        const addAdForm = document.getElementById('add-ad-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const noAdsMessage = document.getElementById('no-ads-message');
+        const userIdEl = document.getElementById('user-id');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalClose = document.getElementById('modal-close');
+        // NOVO ELEMENTO DE FILTRO
+        const categoryFilter = document.getElementById('category-filter'); 
+
+        // Adiciona listener para o filtro
+        categoryFilter.addEventListener('change', applyFilters);
+
+        // Função para mostrar o modal
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+        }
+
+        // Event Listener para fechar o modal
+        modalClose.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        
+        // Função para alternar a visibilidade do formulário (só funciona se for o proprietário)
+        toggleFormBtn.addEventListener('click', () => {
+            if (!isOwner) return; // Segurança extra
+
+            const isHidden = adFormSection.classList.toggle('hidden');
+            if (isHidden) {
+                toggleFormBtn.textContent = '+ Adicionar Nova Oferta';
+                toggleFormBtn.classList.remove('bg-gray-400');
+                toggleFormBtn.classList.add('bg-yellow-400');
+            } else {
+                toggleFormBtn.textContent = 'x Fechar Formulário';
+                toggleFormBtn.classList.remove('bg-yellow-400');
+                toggleFormBtn.classList.add('bg-gray-400');
+                // Rola para o topo do formulário
+                adFormSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        // 1. Inicialização do Firebase
+        (async function initializeFirebase() {
+            try {
+                // Ativar logs de depuração do Firestore (útil para desenvolvimento)
+                setLogLevel('error');
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                authStatusEl.innerHTML = `<p class="font-bold">Aguardando...</p><p>Conectando ao Firebase...</p>`;
+
+                // Autenticação
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdEl.textContent = userId;
+                        isAuthReady = true;
+                        authStatusEl.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-700');
+                        authStatusEl.classList.add('bg-green-100', 'border-green-500', 'text-green-700');
+                        
+                        // Define o status de conexão para Proprietário ou Visualizador
+                        if (isOwner) {
+                            formToggleArea.classList.remove('hidden'); 
+                            authStatusEl.innerHTML = `<p class="font-bold">Conectado como Proprietário!</p><p>Gerencie a lista de anúncios públicos abaixo.</p>`;
+                        } else {
+                            authStatusEl.innerHTML = `<p class="font-bold">Conectado como Visualizador!</p><p>Você está visualizando a lista de ofertas públicas.</p>`;
+                        }
+                        
+                        // Iniciar escuta dos dados após a autenticação
+                        setupRealtimeListener();
+
+                    } else {
+                        // Se não houver usuário, tentar autenticar com o token personalizado (proprietário) ou anonimamente (público)
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            // Se o token não estiver disponível, faça login anonimamente (público)
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Erro na inicialização ou autenticação do Firebase:", error);
+                authStatusEl.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-700');
+                authStatusEl.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+                authStatusEl.innerHTML = `<p class="font-bold">Erro de Conexão!</p><p>Não foi possível conectar ao banco de dados: ${error.message}</p>`;
+            }
+        })();
+
+        /**
+         * Gera o caminho da coleção de anúncios.
+         */
+        function getAdsCollectionPath() {
+            if (!userId) {
+                throw new Error("Usuário não autenticado.");
+            }
+            return SHARED_ADS_COLLECTION_PATH; 
+        }
+        
+        /**
+         * Aplica o filtro de categoria nos dados armazenados e renderiza.
+         */
+        function applyFilters() {
+            const selectedCategory = categoryFilter.value;
+            let filteredAds = allAds;
+
+            if (selectedCategory !== 'all') {
+                // Filtra os anúncios onde a categoria é igual à selecionada
+                filteredAds = allAds.filter(ad => ad.category === selectedCategory);
+            }
+
+            // Renderiza apenas os anúncios filtrados
+            renderAds(filteredAds);
+        }
+        
+        /**
+         * Renderiza a lista de anúncios no container.
+         */
+        function renderAds(adsToRender) {
+            adsContainer.innerHTML = ''; // Limpa os anúncios existentes
+            
+            if (adsToRender.length === 0) {
+                noAdsMessage.classList.remove('hidden');
+            } else {
+                noAdsMessage.classList.add('hidden');
+                adsToRender.forEach(renderAdCard);
+            }
+        }
+
+
+        /**
+         * Renderiza um único card de anúncio.
+         */
+        function renderAdCard(ad) {
+            const platformIcons = {
+                shopee: { icon: '🛍️', color: 'bg-red-500 hover:bg-red-600', name: 'Shopee' },
+                mercadoLivre: { icon: '📦', color: 'bg-yellow-500 hover:bg-yellow-600', name: 'M. Livre' },
+                aliexpress: { icon: '🌐', color: 'bg-blue-500 hover:bg-blue-600', name: 'AliExpress' },
+                amazon: { icon: '🛒', color: 'bg-orange-500 hover:bg-orange-600', name: 'Amazon' },
+            };
+
+            const card = document.createElement('div');
+            // O fundo do card é branco (bg-white), então o texto deve ser escuro (padrão do Tailwind para text-gray-900)
+            card.className = 'bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col transition-transform duration-300 hover:shadow-xl hover:scale-[1.02] border border-gray-200';
+            
+            // Fallback para imagem
+            const fallbackImageUrl = 'https://placehold.co/400x300/1e293b/ffffff?text=Hardware+sem+Imagem';
+
+            // Usando a URL de imagem fornecida, mas com fallback para garantir.
+            const imageUrl = ad.imageUrl && ad.imageUrl.startsWith('http') ? ad.imageUrl : fallbackImageUrl;
+
+            const subcategoryDisplay = ad.subcategory ? 
+                `<span class="text-gray-500 font-medium ml-1">/ ${ad.subcategory}</span>` : '';
+
+            card.innerHTML = `
+                <!-- Imagem do Produto --><div class="h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
+                    <img src="${imageUrl}" 
+                         alt="Imagem de ${ad.title}" 
+                         onerror="this.onerror=null; this.src='${fallbackImageUrl}';"
+                         class="w-full h-full object-cover transition-opacity duration-500">
+                </div>
+                
+                <div class="p-5 flex flex-col flex-grow">
+                    <!-- Categoria e Subcategoria (NOVO) --><div class="mb-2 text-xs font-semibold uppercase text-indigo-600">
+                        ${ad.category || 'Sem Categoria'} ${subcategoryDisplay}
+                    </div>
+                    
+                    <!-- Título e Preço --><h3 class="text-xl font-bold text-gray-900 mb-1">${ad.title}</h3>
+                    <p class="text-3xl font-extrabold text-indigo-600 mb-3">${ad.price}</p>
+                    
+                    <!-- Descrição --><p class="text-gray-600 text-sm mb-4 flex-grow">${ad.description || 'Sem descrição.'}</p>
+
+                    <!-- Botões de Redirecionamento --><div class="mt-4 pt-4 border-t border-gray-100">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Redirecionar para:</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${Object.entries(platformIcons).map(([key, { icon, color, name }]) => 
+                                ad.links && ad.links[key] ? 
+                                    `<a href="${ad.links[key]}" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        class="flex items-center space-x-1 px-3 py-2 text-white text-sm font-medium rounded-full ${color} transition duration-150 shadow-md hover:shadow-lg">
+                                        <span>${icon}</span> 
+                                        <span>${name}</span>
+                                    </a>` : ''
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            adsContainer.appendChild(card);
+        }
+
+        /**
+         * Configura o listener em tempo real para os anúncios.
+         */
+        function setupRealtimeListener() {
+            if (!isAuthReady || !db) return;
+
+            try {
+                // Todos (Proprietário e Público) leem do caminho público.
+                const adsColRef = collection(db, getAdsCollectionPath());
+                const q = query(adsColRef);
+                
+                // onSnapshot escuta as mudanças em tempo real
+                onSnapshot(q, (snapshot) => {
+                    
+                    const fetchedAds = [];
+                    snapshot.forEach((doc) => {
+                        const adData = doc.data();
+                        fetchedAds.push({ id: doc.id, ...adData });
+                    });
+
+                    // 1. Ordena os anúncios por data de criação
+                    fetchedAds.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                    
+                    // 2. Armazena a lista completa na variável global
+                    allAds = fetchedAds;
+
+                    // 3. Aplica o filtro atual (e renderiza)
+                    applyFilters();
+                    
+                }, (error) => {
+                    console.error("Erro ao receber dados do Firestore:", error);
+                    showModal("Erro de Leitura", "Não foi possível carregar os anúncios públicos. Verifique sua conexão.");
+                });
+
+            } catch (error) {
+                console.error("Erro ao configurar o listener:", error);
+                showModal("Erro Interno", "Falha ao configurar a escuta em tempo real. " + error.message);
+            }
+        }
+
+        /**
+         * Lida com o envio do formulário para adicionar um novo anúncio.
+         */
+        addAdForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // VERIFICAÇÃO ADICIONAL: APENAS O PROPRIETÁRIO PODE ESCREVER NO CAMINHO PÚBLICO
+            if (!isOwner) {
+                showModal("Acesso Negado", "Você não tem permissão para adicionar novos anúncios. Apenas o proprietário pode fazer isso.");
+                return;
+            }
+
+            if (!isAuthReady || !db) {
+                showModal("Aguarde", "A conexão com o banco de dados ainda não está pronta. Tente novamente em instantes.");
+                return;
+            }
+
+            submitBtn.textContent = 'Salvando...';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
+
+            try {
+                const title = document.getElementById('title').value.trim();
+                const price = document.getElementById('price').value.trim();
+                
+                // NOVOS CAMPOS
+                const category = document.getElementById('category').value.trim();
+                const subcategory = document.getElementById('subcategory').value.trim();
+
+                const description = document.getElementById('description').value.trim();
+                const imageUrl = document.getElementById('imageUrl').value.trim();
+                
+                const links = {
+                    shopee: document.getElementById('link_shopee').value.trim() || null,
+                    mercadoLivre: document.getElementById('link_mercadoLivre').value.trim() || null,
+                    aliexpress: document.getElementById('link_aliexpress').value.trim() || null,
+                    amazon: document.getElementById('link_amazon').value.trim() || null,
+                };
+                
+                // Validação de Categorias
+                if (!title) {
+                    throw new Error("O Título do Produto é obrigatório.");
+                }
+                if (!category) {
+                     throw new Error("A Categoria Principal é obrigatória.");
+                }
+
+                const newAd = {
+                    title,
+                    price,
+                    category, // Adiciona a categoria
+                    subcategory: subcategory || null, // Adiciona a subcategoria (pode ser null)
+                    description,
+                    imageUrl,
+                    links,
+                    createdAt: serverTimestamp(),
+                };
+
+                // O proprietário escreve diretamente na coleção pública.
+                const adsColRef = collection(db, getAdsCollectionPath());
+                await addDoc(adsColRef, newAd);
+
+                addAdForm.reset(); // Limpa o formulário
+                // Alterna para ocultar o formulário novamente após o sucesso
+                adFormSection.classList.add('hidden');
+                toggleFormBtn.textContent = '+ Adicionar Nova Oferta';
+                toggleFormBtn.classList.remove('bg-gray-400');
+                toggleFormBtn.classList.add('bg-yellow-400');
+                
+                showModal("Sucesso!", "Novo anúncio de hardware adicionado e salvo na lista pública.");
+
+            } catch (error) {
+                console.error("Erro ao adicionar anúncio:", error);
+                showModal("Erro ao Salvar", "Não foi possível adicionar o anúncio: " + error.message);
+
+            } finally {
+                submitBtn.textContent = 'Adicionar Anúncio';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50');
+            }
+        });
+
+    </script>
+</body>
+</html>
